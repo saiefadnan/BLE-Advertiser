@@ -17,6 +17,7 @@ import java.util.*
 class MainActivity: FlutterActivity() {
   private val CHANNEL = "com.example.ble/advertiser"
   private var advertiser: BluetoothLeAdvertiser? = null
+  private var advertiseCallback: AdvertiseCallback? = null
 
   override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
     super.configureFlutterEngine(flutterEngine)
@@ -46,6 +47,7 @@ class MainActivity: FlutterActivity() {
     Log.d("BLE", "Advertising UUID: $uuid")
     val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
     val bluetoothAdapter = bluetoothManager.adapter
+    advertiseCallback = object : AdvertiseCallback() {}
     if (!bluetoothAdapter.isEnabled || !bluetoothAdapter.isMultipleAdvertisementSupported) return false
 
     advertiser = bluetoothAdapter.bluetoothLeAdvertiser
@@ -61,13 +63,14 @@ class MainActivity: FlutterActivity() {
       .addServiceUuid(ParcelUuid(uuid)) // Battery service UUID (can be custom)
       .addManufacturerData(manufacturerId, manufacturerData)
       .build()
-
-    advertiser?.startAdvertising(settings, data, object : AdvertiseCallback() {})
+    
+    advertiser?.startAdvertising(settings, data, advertiseCallback)
     return true
   }
 
   private fun stopBleAdvertising() {
-    advertiser?.stopAdvertising(object : AdvertiseCallback() {})
+    advertiser?.stopAdvertising(advertiseCallback)
+    advertiseCallback = null
     advertiser = null
   }
 }
